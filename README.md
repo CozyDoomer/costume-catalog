@@ -1,4 +1,4 @@
-Costume Catalog [![Build Status](https://travis-ci.com/CozyDoomer/costume-catalog.svg?branch=master)](https://travis-ci.com/CozyDoomer/costume-catalog) [![](https://img.shields.io/codecov/c/github/CozyDoomer/costume-catalog?color=green&logo=test%20coverage)](https://codecov.io/gh/CozyDoomer/costume-catalog)
+Costume Catalog [![Build Status](https://travis-ci.com/CozyDoomer/costume-catalog.svg?branch=main)](https://travis-ci.com/CozyDoomer/costume-catalog) [![](https://img.shields.io/codecov/c/github/CozyDoomer/costume-catalog?color=green&logo=test%20coverage)](https://codecov.io/gh/CozyDoomer/costume-catalog)
 ====
 
 A web application that allows to query costumes
