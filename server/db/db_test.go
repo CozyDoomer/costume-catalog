@@ -11,16 +11,48 @@ func TestFilter(t *testing.T) {
 
 	got := mongoDB.filter("test")
 
-	want := bson.D{{
-		"tags.name",
+	want := bson.D{{"$or", []bson.D{
 		bson.D{{
-			"$regex",
-			"^test.*$",
-		}, {
-			"$options",
-			"i",
+			"tags.name",
+			bson.D{{
+				"$regex",
+				"^test.*$",
+			}, {
+				"$options",
+				"i",
+			}},
 		}},
-	}}
+		bson.D{{
+			"name",
+			bson.D{{
+				"$regex",
+				"^test.*$",
+			}, {
+				"$options",
+				"i",
+			}},
+		}},
+		bson.D{{
+			"description",
+			bson.D{{
+				"$regex",
+				"^test.*$",
+			}, {
+				"$options",
+				"i",
+			}},
+		}},
+		bson.D{{
+			"location",
+			bson.D{{
+				"$regex",
+				"^test.*$",
+			}, {
+				"$options",
+				"i",
+			}},
+		}},
+	}}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("filter() got = %v, want %v", got, want)
 	}
