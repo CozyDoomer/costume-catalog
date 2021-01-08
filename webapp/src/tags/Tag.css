@@ -1,0 +1,31 @@
+.tags {
+    display: flex;
+}
+
+.tag {
+    display: inline-block;
+    align-self: flex-end;
+    padding: 10px;
+    margin-right: 8px;
+}
+
+.greyTag {
+    background-color: lightgrey;
+}
+
+.greyTag:hover {
+    background-color: darkgrey;
+}
+
+.greenTag {
+    background-color: greenyellow;
+}
+
+.greenTag:hover {
+    background-color: darkseagreen;
+}
+
+.boldText {
+    font-weight: bold;
+}
+

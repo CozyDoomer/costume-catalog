@@ -1,0 +1,19 @@
+type Costume {
+    id: ID!
+    name: String!
+    description: String!
+    picture: String
+    location: String!
+    tags: [Tag!]!
+}
+
+type Tag {
+    id: ID!
+    name: String!
+    icon: String
+    importance: Int!
+}
+
+type Query {
+    costumes(search: String!): [Costume!]!
+}

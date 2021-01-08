@@ -1,0 +1,20 @@
+db.costumes.insert({
+    "name": "Goth Dress",
+    "description": "edgy white dotted goth dress",
+    "location": "storage room 2, 321",
+    "picture": "https://i.etsystatic.com/5542011/r/il/907526/790908903/il_1140xN.790908903_7u5y.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500",
+    "tags": [
+        {"name": "Black", "icon": "palette", "importance": 10},
+        {"name": "Red", "icon": "palette", "importance": 10},
+    ]
+});
+db.costumes.insert({
+    "name": "Sexy Maid",
+    "description": "japanese maid 2 pieces (femboi)",
+    "location": "storage room 1, 3",
+    "picture": "https://d2h1pu99sxkfvn.cloudfront.net/b0/1130742/95972529_EGifvw34F0.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500",
+    "tags": [
+        {"name": "Black", "icon": "palette", "importance": 10},
+        {"name": "White", "icon": "palette", "importance": 10},
+    ]
+});
