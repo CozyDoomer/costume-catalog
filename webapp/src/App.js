@@ -12,8 +12,8 @@ export class App extends Component {
         search: ""
     };
     updateSearch = (search) => {
-        this.setState({search: search.trim()});
-        this.requestCostumes(search.trim())
+        this.setState({search: search});
+        this.requestCostumes(search)
     };
 
     componentDidMount() {
