@@ -24,7 +24,7 @@ export class App extends Component {
         this.client.query({
             query: gql`
                 {
-                    costumes(tag: "${search}") {
+                    costumes(search: "${search}") {
                         name,
                         description,
                         picture,

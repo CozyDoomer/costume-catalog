@@ -52,7 +52,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Costumes func(childComplexity int, tag string) int
+		Costumes func(childComplexity int, search string) int
 	}
 
 	Tag struct {
@@ -64,7 +64,7 @@ type ComplexityRoot struct {
 }
 
 type QueryResolver interface {
-	Costumes(ctx context.Context, tag string) ([]*model.Costume, error)
+	Costumes(ctx context.Context, search string) ([]*model.Costume, error)
 }
 
 type executableSchema struct {
@@ -134,7 +134,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Costumes(childComplexity, args["tag"].(string)), true
+		return e.complexity.Query.Costumes(childComplexity, args["search"].(string)), true
 
 	case "Tag.id":
 		if e.complexity.Tag.ID == nil {
@@ -230,7 +230,7 @@ type Tag {
 }
 
 type Query {
-    costumes(tag: String!): [Costume!]!
+    costumes(search: String!): [Costume!]!
 }
 `},
 )
@@ -257,13 +257,13 @@ func (ec *executionContext) field_Query_costumes_args(ctx context.Context, rawAr
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["tag"]; ok {
+	if tmp, ok := rawArgs["search"]; ok {
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["tag"] = arg0
+	args["search"] = arg0
 	return args, nil
 }
 
@@ -519,7 +519,7 @@ func (ec *executionContext) _Costume_tags(ctx context.Context, field graphql.Col
 	res := resTmp.([]*model.Tag)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋshpotaᚋskmzᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_costumes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -548,7 +548,7 @@ func (ec *executionContext) _Query_costumes(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Costumes(rctx, args["tag"].(string))
+		return ec.resolvers.Query().Costumes(rctx, args["search"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -563,7 +563,7 @@ func (ec *executionContext) _Query_costumes(ctx context.Context, field graphql.C
 	res := resTmp.([]*model.Costume)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCostume2ᚕᚖgithubᚗcomᚋshpotaᚋskmzᚋmodelᚐCostumeᚄ(ctx, field.Selections, res)
+	return ec.marshalNCostume2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2336,11 +2336,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCostume2githubᚗcomᚋshpotaᚋskmzᚋmodelᚐCostume(ctx context.Context, sel ast.SelectionSet, v model.Costume) graphql.Marshaler {
+func (ec *executionContext) marshalNCostume2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx context.Context, sel ast.SelectionSet, v model.Costume) graphql.Marshaler {
 	return ec._Costume(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCostume2ᚕᚖgithubᚗcomᚋshpotaᚋskmzᚋmodelᚐCostumeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Costume) graphql.Marshaler {
+func (ec *executionContext) marshalNCostume2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Costume) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2364,7 +2364,7 @@ func (ec *executionContext) marshalNCostume2ᚕᚖgithubᚗcomᚋshpotaᚋskmz�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCostume2ᚖgithubᚗcomᚋshpotaᚋskmzᚋmodelᚐCostume(ctx, sel, v[i])
+			ret[i] = ec.marshalNCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2377,7 +2377,7 @@ func (ec *executionContext) marshalNCostume2ᚕᚖgithubᚗcomᚋshpotaᚋskmz�
 	return ret
 }
 
-func (ec *executionContext) marshalNCostume2ᚖgithubᚗcomᚋshpotaᚋskmzᚋmodelᚐCostume(ctx context.Context, sel ast.SelectionSet, v *model.Costume) graphql.Marshaler {
+func (ec *executionContext) marshalNCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx context.Context, sel ast.SelectionSet, v *model.Costume) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2429,11 +2429,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTag2githubᚗcomᚋshpotaᚋskmzᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTag2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
 	return ec._Tag(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋshpotaᚋskmzᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2457,7 +2457,7 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋshpotaᚋskmzᚋmod
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋshpotaᚋskmzᚋmodelᚐTag(ctx, sel, v[i])
+			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2470,7 +2470,7 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋshpotaᚋskmzᚋmod
 	return ret
 }
 
-func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋshpotaᚋskmzᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
