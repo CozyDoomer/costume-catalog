@@ -35,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Mutation() MutationResolver
 	Query() QueryResolver
 }
 
@@ -51,8 +52,13 @@ type ComplexityRoot struct {
 		Tags        func(childComplexity int) int
 	}
 
+	Mutation struct {
+		CreateCostume func(childComplexity int, data model.CostumeCreateInput) int
+		UpdateCostume func(childComplexity int, data model.CostumeUpdateInput) int
+	}
+
 	Query struct {
-		Costumes func(childComplexity int, search string) int
+		Costumes func(childComplexity int, search *string) int
 	}
 
 	Tag struct {
@@ -63,8 +69,12 @@ type ComplexityRoot struct {
 	}
 }
 
+type MutationResolver interface {
+	CreateCostume(ctx context.Context, data model.CostumeCreateInput) (*model.Costume, error)
+	UpdateCostume(ctx context.Context, data model.CostumeUpdateInput) (*model.Costume, error)
+}
 type QueryResolver interface {
-	Costumes(ctx context.Context, search string) ([]*model.Costume, error)
+	Costumes(ctx context.Context, search *string) ([]*model.Costume, error)
 }
 
 type executableSchema struct {
@@ -124,6 +134,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Costume.Tags(childComplexity), true
 
+	case "Mutation.CreateCostume":
+		if e.complexity.Mutation.CreateCostume == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_CreateCostume_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateCostume(childComplexity, args["data"].(model.CostumeCreateInput)), true
+
+	case "Mutation.UpdateCostume":
+		if e.complexity.Mutation.UpdateCostume == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_UpdateCostume_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateCostume(childComplexity, args["data"].(model.CostumeUpdateInput)), true
+
 	case "Query.costumes":
 		if e.complexity.Query.Costumes == nil {
 			break
@@ -134,7 +168,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Costumes(childComplexity, args["search"].(string)), true
+		return e.complexity.Query.Costumes(childComplexity, args["search"].(*string)), true
 
 	case "Tag.id":
 		if e.complexity.Tag.ID == nil {
@@ -186,7 +220,20 @@ func (e *executableSchema) Query(ctx context.Context, op *ast.OperationDefinitio
 }
 
 func (e *executableSchema) Mutation(ctx context.Context, op *ast.OperationDefinition) *graphql.Response {
-	return graphql.ErrorResponse(ctx, "mutations are not supported")
+	ec := executionContext{graphql.GetRequestContext(ctx), e}
+
+	buf := ec.RequestMiddleware(ctx, func(ctx context.Context) []byte {
+		data := ec._Mutation(ctx, op.SelectionSet)
+		var buf bytes.Buffer
+		data.MarshalGQL(&buf)
+		return buf.Bytes()
+	})
+
+	return &graphql.Response{
+		Data:       buf,
+		Errors:     ec.Errors,
+		Extensions: ec.Extensions,
+	}
 }
 
 func (e *executableSchema) Subscription(ctx context.Context, op *ast.OperationDefinition) func() *graphql.Response {
@@ -213,31 +260,89 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "gql/schema.graphql", Input: `type Costume {
-    id: ID!
+	&ast.Source{Name: "gql/schema.graphql", Input: `type Mutation {
+    CreateCostume(data: CostumeCreateInput!): Costume!
+    UpdateCostume(data: CostumeUpdateInput!): Costume!
+}
+
+input TagInput {
+    id: ID
     name: String!
-    description: String!
+    icon: String
+    importance: Int
+}
+
+input CostumeCreateInput {
+    id: ID
+    name: String!
+    description: String
     picture: String
     location: String!
-    tags: [Tag!]!
+    tags: [TagInput]
+}
+
+input CostumeUpdateInput {
+    name: String
+    description: String
+    picture: String
+    location: String
+    tags: [TagInput]
+}
+
+type Query {
+    costumes(search: String): [Costume]!
+}
+
+type Costume{
+    id: ID!
+    name: String!
+    description: String
+    picture: String
+    location: String!
+    tags: [Tag]!
 }
 
 type Tag {
     id: ID!
     name: String!
     icon: String
-    importance: Int!
+    importance: Int
 }
 
-type Query {
-    costumes(search: String!): [Costume!]!
-}
 `},
 )
 
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_CreateCostume_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CostumeCreateInput
+	if tmp, ok := rawArgs["data"]; ok {
+		arg0, err = ec.unmarshalNCostumeCreateInput2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeCreateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["data"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_UpdateCostume_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CostumeUpdateInput
+	if tmp, ok := rawArgs["data"]; ok {
+		arg0, err = ec.unmarshalNCostumeUpdateInput2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["data"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -256,9 +361,9 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_costumes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 *string
 	if tmp, ok := rawArgs["search"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -403,15 +508,12 @@ func (ec *executionContext) _Costume_description(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Costume_picture(ctx context.Context, field graphql.CollectedField, obj *model.Costume) (ret graphql.Marshaler) {
@@ -519,7 +621,95 @@ func (ec *executionContext) _Costume_tags(ctx context.Context, field graphql.Col
 	res := resTmp.([]*model.Tag)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_CreateCostume(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_CreateCostume_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateCostume(rctx, args["data"].(model.CostumeCreateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Costume)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_UpdateCostume(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_UpdateCostume_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateCostume(rctx, args["data"].(model.CostumeUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Costume)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_costumes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -548,7 +738,7 @@ func (ec *executionContext) _Query_costumes(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Costumes(rctx, args["search"].(string))
+		return ec.resolvers.Query().Costumes(rctx, args["search"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -563,7 +753,7 @@ func (ec *executionContext) _Query_costumes(ctx context.Context, field graphql.C
 	res := resTmp.([]*model.Costume)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCostume2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeᚄ(ctx, field.Selections, res)
+	return ec.marshalNCostume2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -775,15 +965,12 @@ func (ec *executionContext) _Tag_importance(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -1937,6 +2124,132 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCostumeCreateInput(ctx context.Context, obj interface{}) (model.CostumeCreateInput, error) {
+	var it model.CostumeCreateInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "picture":
+			var err error
+			it.Picture, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "location":
+			var err error
+			it.Location, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tags":
+			var err error
+			it.Tags, err = ec.unmarshalOTagInput2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCostumeUpdateInput(ctx context.Context, obj interface{}) (model.CostumeUpdateInput, error) {
+	var it model.CostumeUpdateInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+			it.Description, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "picture":
+			var err error
+			it.Picture, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "location":
+			var err error
+			it.Location, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tags":
+			var err error
+			it.Tags, err = ec.unmarshalOTagInput2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj interface{}) (model.TagInput, error) {
+	var it model.TagInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "icon":
+			var err error
+			it.Icon, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "importance":
+			var err error
+			it.Importance, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -1968,9 +2281,6 @@ func (ec *executionContext) _Costume(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "description":
 			out.Values[i] = ec._Costume_description(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "picture":
 			out.Values[i] = ec._Costume_picture(ctx, field, obj)
 		case "location":
@@ -1980,6 +2290,42 @@ func (ec *executionContext) _Costume(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "tags":
 			out.Values[i] = ec._Costume_tags(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var mutationImplementors = []string{"Mutation"}
+
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, mutationImplementors)
+
+	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
+		Object: "Mutation",
+	})
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Mutation")
+		case "CreateCostume":
+			out.Values[i] = ec._Mutation_CreateCostume(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "UpdateCostume":
+			out.Values[i] = ec._Mutation_UpdateCostume(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2063,9 +2409,6 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 			out.Values[i] = ec._Tag_icon(ctx, field, obj)
 		case "importance":
 			out.Values[i] = ec._Tag_importance(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2340,7 +2683,7 @@ func (ec *executionContext) marshalNCostume2githubᚗcomᚋCozyDoomerᚋcostume�
 	return ec._Costume(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCostume2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Costume) graphql.Marshaler {
+func (ec *executionContext) marshalNCostume2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx context.Context, sel ast.SelectionSet, v []*model.Costume) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2364,7 +2707,7 @@ func (ec *executionContext) marshalNCostume2ᚕᚖgithubᚗcomᚋCozyDoomerᚋco
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx, sel, v[i])
+			ret[i] = ec.marshalOCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2387,26 +2730,20 @@ func (ec *executionContext) marshalNCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostu
 	return ec._Costume(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNCostumeCreateInput2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeCreateInput(ctx context.Context, v interface{}) (model.CostumeCreateInput, error) {
+	return ec.unmarshalInputCostumeCreateInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNCostumeUpdateInput2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeUpdateInput(ctx context.Context, v interface{}) (model.CostumeUpdateInput, error) {
+	return ec.unmarshalInputCostumeUpdateInput(ctx, v)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalID(v)
 }
 
 func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalID(v)
-	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	return graphql.UnmarshalInt(v)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2429,11 +2766,7 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTag2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
-	return ec._Tag(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2457,7 +2790,7 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostum
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx, sel, v[i])
+			ret[i] = ec.marshalOTag2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2468,16 +2801,6 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostum
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
-	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Tag(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -2729,6 +3052,63 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
+func (ec *executionContext) marshalOCostume2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx context.Context, sel ast.SelectionSet, v model.Costume) graphql.Marshaler {
+	return ec._Costume(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx context.Context, sel ast.SelectionSet, v *model.Costume) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Costume(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOID2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalID(v)
+}
+
+func (ec *executionContext) marshalOID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalID(v)
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOID2string(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOID2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {
+	return graphql.UnmarshalInt(v)
+}
+
+func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	return graphql.MarshalInt(v)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOInt2int(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOInt2int(ctx, sel, *v)
+}
+
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalString(v)
 }
@@ -2750,6 +3130,49 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOTag2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
+	return ec._Tag(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Tag(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOTagInput2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagInput(ctx context.Context, v interface{}) (model.TagInput, error) {
+	return ec.unmarshalInputTagInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalOTagInput2ᚕᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagInput(ctx context.Context, v interface{}) ([]*model.TagInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*model.TagInput, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalOTagInput2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOTagInput2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagInput(ctx context.Context, v interface{}) (*model.TagInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOTagInput2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐTagInput(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

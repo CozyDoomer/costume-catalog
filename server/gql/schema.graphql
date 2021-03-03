@@ -1,19 +1,49 @@
-type Costume {
-    id: ID!
+type Mutation {
+    CreateCostume(data: CostumeCreateInput!): Costume!
+    UpdateCostume(data: CostumeUpdateInput!): Costume!
+}
+
+input TagInput {
+    id: ID
     name: String!
-    description: String!
+    icon: String
+    importance: Int
+}
+
+input CostumeCreateInput {
+    id: ID
+    name: String!
+    description: String
     picture: String
     location: String!
-    tags: [Tag!]!
+    tags: [TagInput]
+}
+
+input CostumeUpdateInput {
+    name: String
+    description: String
+    picture: String
+    location: String
+    tags: [TagInput]
+}
+
+type Query {
+    costumes(search: String): [Costume]!
+}
+
+type Costume{
+    id: ID!
+    name: String!
+    description: String
+    picture: String
+    location: String!
+    tags: [Tag]!
 }
 
 type Tag {
     id: ID!
     name: String!
     icon: String
-    importance: Int!
+    importance: Int
 }
 
-type Query {
-    costumes(search: String!): [Costume!]!
-}
