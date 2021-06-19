@@ -3,7 +3,7 @@
 package model
 
 type Costume struct {
-	ID          string  `json:"id"`
+	ID          string  `json:"id" bson:"_id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
 	Picture     *string `json:"picture"`
@@ -12,7 +12,6 @@ type Costume struct {
 }
 
 type CostumeCreateInput struct {
-	ID          *string     `json:"id"`
 	Name        string      `json:"name"`
 	Description *string     `json:"description"`
 	Picture     *string     `json:"picture"`
@@ -29,14 +28,13 @@ type CostumeUpdateInput struct {
 }
 
 type Tag struct {
-	ID         string  `json:"id"`
+	ID         string  `json:"id" bson:"_id"`
 	Name       string  `json:"name"`
 	Icon       *string `json:"icon"`
 	Importance *int    `json:"importance"`
 }
 
 type TagInput struct {
-	ID         *string `json:"id"`
 	Name       string  `json:"name"`
 	Icon       *string `json:"icon"`
 	Importance *int    `json:"importance"`

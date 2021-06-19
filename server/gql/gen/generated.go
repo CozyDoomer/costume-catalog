@@ -54,7 +54,8 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateCostume func(childComplexity int, data model.CostumeCreateInput) int
-		UpdateCostume func(childComplexity int, data model.CostumeUpdateInput) int
+		DeleteCostume func(childComplexity int, id string) int
+		UpdateCostume func(childComplexity int, id string, data model.CostumeUpdateInput) int
 	}
 
 	Query struct {
@@ -71,7 +72,8 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateCostume(ctx context.Context, data model.CostumeCreateInput) (*model.Costume, error)
-	UpdateCostume(ctx context.Context, data model.CostumeUpdateInput) (*model.Costume, error)
+	UpdateCostume(ctx context.Context, id string, data model.CostumeUpdateInput) (*model.Costume, error)
+	DeleteCostume(ctx context.Context, id string) (int, error)
 }
 type QueryResolver interface {
 	Costumes(ctx context.Context, search *string) ([]*model.Costume, error)
@@ -146,6 +148,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateCostume(childComplexity, args["data"].(model.CostumeCreateInput)), true
 
+	case "Mutation.DeleteCostume":
+		if e.complexity.Mutation.DeleteCostume == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_DeleteCostume_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteCostume(childComplexity, args["id"].(string)), true
+
 	case "Mutation.UpdateCostume":
 		if e.complexity.Mutation.UpdateCostume == nil {
 			break
@@ -156,7 +170,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateCostume(childComplexity, args["data"].(model.CostumeUpdateInput)), true
+		return e.complexity.Mutation.UpdateCostume(childComplexity, args["id"].(string), args["data"].(model.CostumeUpdateInput)), true
 
 	case "Query.costumes":
 		if e.complexity.Query.Costumes == nil {
@@ -262,18 +276,17 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "gql/schema.graphql", Input: `type Mutation {
     CreateCostume(data: CostumeCreateInput!): Costume!
-    UpdateCostume(data: CostumeUpdateInput!): Costume!
+    UpdateCostume(id: ID!, data: CostumeUpdateInput!): Costume!
+    DeleteCostume(id: ID!): Int!
 }
 
 input TagInput {
-    id: ID
     name: String!
     icon: String
     importance: Int
 }
 
 input CostumeCreateInput {
-    id: ID
     name: String!
     description: String
     picture: String
@@ -330,17 +343,39 @@ func (ec *executionContext) field_Mutation_CreateCostume_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_UpdateCostume_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_DeleteCostume_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.CostumeUpdateInput
-	if tmp, ok := rawArgs["data"]; ok {
-		arg0, err = ec.unmarshalNCostumeUpdateInput2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeUpdateInput(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["data"] = arg0
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_UpdateCostume_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.CostumeUpdateInput
+	if tmp, ok := rawArgs["data"]; ok {
+		arg1, err = ec.unmarshalNCostumeUpdateInput2githubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostumeUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["data"] = arg1
 	return args, nil
 }
 
@@ -694,7 +729,7 @@ func (ec *executionContext) _Mutation_UpdateCostume(ctx context.Context, field g
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateCostume(rctx, args["data"].(model.CostumeUpdateInput))
+		return ec.resolvers.Mutation().UpdateCostume(rctx, args["id"].(string), args["data"].(model.CostumeUpdateInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -710,6 +745,50 @@ func (ec *executionContext) _Mutation_UpdateCostume(ctx context.Context, field g
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostumeᚑcatalogᚋmodelᚐCostume(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_DeleteCostume(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_DeleteCostume_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteCostume(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_costumes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2130,12 +2209,6 @@ func (ec *executionContext) unmarshalInputCostumeCreateInput(ctx context.Context
 
 	for k, v := range asMap {
 		switch k {
-		case "id":
-			var err error
-			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "name":
 			var err error
 			it.Name, err = ec.unmarshalNString2string(ctx, v)
@@ -2220,12 +2293,6 @@ func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj inte
 
 	for k, v := range asMap {
 		switch k {
-		case "id":
-			var err error
-			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "name":
 			var err error
 			it.Name, err = ec.unmarshalNString2string(ctx, v)
@@ -2326,6 +2393,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "UpdateCostume":
 			out.Values[i] = ec._Mutation_UpdateCostume(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "DeleteCostume":
+			out.Values[i] = ec._Mutation_DeleteCostume(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2752,6 +2824,20 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	return graphql.UnmarshalInt(v)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalString(v)
 }
@@ -3061,29 +3147,6 @@ func (ec *executionContext) marshalOCostume2ᚖgithubᚗcomᚋCozyDoomerᚋcostu
 		return graphql.Null
 	}
 	return ec._Costume(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOID2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalID(v)
-}
-
-func (ec *executionContext) marshalOID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	return graphql.MarshalID(v)
-}
-
-func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOID2string(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec.marshalOID2string(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {

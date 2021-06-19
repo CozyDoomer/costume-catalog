@@ -12,17 +12,17 @@
 .greyTag {
     background-color: lightgrey;
 }
-
+ 
 .greyTag:hover {
-    background-color: darkgrey;
+    background-color:darkgrey;
 }
 
 .greenTag {
-    background-color: greenyellow;
+    background-color:#80cbc4;
 }
 
 .greenTag:hover {
-    background-color: darkseagreen;
+    background-color: #b2dfdb;
 }
 
 .boldText {

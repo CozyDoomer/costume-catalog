@@ -33,7 +33,12 @@ func (r *mutationResolver) CreateCostume(ctx context.Context, input model.Costum
 	return res, err
 }
 
-func (r *mutationResolver) UpdateCostume(ctx context.Context, input model.CostumeUpdateInput) (*model.Costume, error) {
-	res, err := r.DB.UpdateCostume(input)
+func (r *mutationResolver) DeleteCostume(ctx context.Context, oid string) (int, error) {
+	deleteCount, err := r.DB.DeleteCostume(oid)
+	return int(deleteCount), err
+}
+
+func (r *mutationResolver) UpdateCostume(ctx context.Context, oid string, input model.CostumeUpdateInput) (*model.Costume, error) {
+	res, err := r.DB.UpdateCostume(oid, input)
 	return res, err
 }

@@ -4,7 +4,7 @@ services:
     image: mongo:4.2.2
     container_name: dev_db
     environment:
-      MONGO_INITDB_DATABASE: costumes
+      MONG_INITDB_DATABASE: costumes
     ports:
       - 27017:27017
     volumes:

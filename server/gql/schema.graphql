@@ -1,17 +1,16 @@
 type Mutation {
     CreateCostume(data: CostumeCreateInput!): Costume!
-    UpdateCostume(data: CostumeUpdateInput!): Costume!
+    UpdateCostume(id: ID!, data: CostumeUpdateInput!): Costume!
+    DeleteCostume(id: ID!): Int!
 }
 
 input TagInput {
-    id: ID
     name: String!
     icon: String
     importance: Int
 }
 
 input CostumeCreateInput {
-    id: ID
     name: String!
     description: String
     picture: String

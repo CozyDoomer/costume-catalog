@@ -1,53 +1,41 @@
-import React, {Component} from 'react';
-import ApolloClient, {gql} from 'apollo-boost';
-import {Costumes} from "./costumes/Costumes";
-import {SearchBox} from "./search/SearchBox";
+import React, { useState } from "react";
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_COSTUMES, DELETE_COSTUME, UPDATE_COSTUME } from "./gql/queries";
+import Costumes from "./costumes/Costumes";
+import SearchBox from "./search/SearchBox";
+import ModalForm from "./modalform/ModalForm";
 
-export class App extends Component {
-    client = new ApolloClient({
-        uri: `${process.env.REACT_APP_API_URL}/query`
-    });
-    state = {
-        costumes: [],
-        search: ""
-    };
-    updateSearch = (search) => {
-        this.setState({search: search});
-        this.requestCostumes(search)
-    };
+const App = () => {
+  const addButtonText = "Add Costume";
 
-    componentDidMount() {
-        this.requestCostumes(this.state.search);
-    }
+  const [search, setSearch] = useState("");
 
-    requestCostumes(search) {
-        this.client.query({
-            query: gql`
-                {
-                    costumes(search: "${search}") {
-                        name,
-                        description,
-                        picture,
-                        location,
-                        tags{
-                            name,
-                            icon,
-                            importance
-                        }
-                    }
-                }
-            `
-        })
-        .then(result => this.setState({
-            costumes: result.data.costumes
-        }));
-    }
+  const { loading, error, data, refetch } = useQuery(GET_COSTUMES, {
+    variables: { search },
+    pollInterval: 2000,
+  });
 
-    render() {
-        return <div className="container collection">
-            <SearchBox search={this.state.search} updateSearch={this.updateSearch}/>
-            <Costumes costumes={this.state.costumes}
-                         search={this.state.search} updateSearch={this.updateSearch}/>
-        </div>;
-    }
-}
+  const [deleteCostume] = useMutation(DELETE_COSTUME);
+  const [updateCostume] = useMutation(UPDATE_COSTUME);
+
+  const updateSearch = (search) => {
+    let safeSearch = search.replace(/[^\w\s]/gi, "");
+    setSearch(safeSearch);
+  };
+
+  return (
+    <div className="container collection">
+      <ModalForm addButtonText={addButtonText} />
+      <SearchBox search={search} updateSearch={updateSearch} />
+      <Costumes
+        costumes={data}
+        search={search}
+        updateSearch={updateSearch}
+        deleteCostume={deleteCostume}
+        updateCostume={updateCostume}
+      />
+    </div>
+  );
+};
+
+export default App;
