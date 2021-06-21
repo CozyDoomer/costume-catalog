@@ -1,22 +1,12 @@
-import React, { forwardRef, useState, useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Modal } from "./Modal";
-import AddButton from "./AddButton";
 
-const ModalForm = forwardRef(({ addButtonText }, ref) => {
-  const [shown, setShown] = useState({ isShown: false });
-  const addButton = useRef(null);
+const ModalForm = ({ initialForm, formType, setModalShown }) => {
   const closeButton = useRef(null);
   const modalRef = useRef(null);
 
-  const showModal = () => {
-    setShown({ isShown: true });
-    toggleScrollLock();
-  };
-
   const closeModal = () => {
-    setShown({ isShown: false });
-    addButton.current.focus();
-    toggleScrollLock();
+    setModalShown({ isShown: false });
   };
 
   const onKeyDown = (event) => {
@@ -34,24 +24,25 @@ const ModalForm = forwardRef(({ addButtonText }, ref) => {
     document.querySelector("html").classList.toggle("scroll-lock");
   };
 
+  useEffect(() => {
+    // toggle scroll lock on when component is built - toggle off on cleanup
+    toggleScrollLock();
+    return function cleanup() {
+      toggleScrollLock();
+    };
+  });
+
   return (
-    <React.Fragment>
-      <AddButton
-        showModal={showModal}
-        buttonRef={addButton}
-        addButtonText={addButtonText}
-      />
-      {shown.isShown ? (
-        <Modal
-          modalRef={modalRef}
-          buttonRef={closeButton}
-          closeModal={closeModal}
-          onKeyDown={onKeyDown}
-          onClickOutside={onClickOutside}
-        />
-      ) : null}
-    </React.Fragment>
+    <Modal
+      initialForm={initialForm}
+      formType={formType}
+      modalRef={modalRef}
+      buttonRef={closeButton}
+      closeModal={closeModal}
+      onKeyDown={onKeyDown}
+      onClickOutside={onClickOutside}
+    />
   );
-});
+};
 
 export default ModalForm;

@@ -6,13 +6,15 @@ const Costumes = (props) => {
   if (props.costumes === undefined) {
     return <div></div>;
   }
-  console.log(props);
   const costumes = props.costumes.costumes.map((pr, i) => (
     <Costume
       costume={pr}
       id={pr.id}
       key={i}
       search={props.search}
+      setInitialForm={props.setInitialForm}
+      setFormType={props.setFormType}
+      setModalShown={props.setModalShown}
       updateSearch={props.updateSearch}
       deleteCostume={props.deleteCostume}
       updateCostume={props.updateCostume}

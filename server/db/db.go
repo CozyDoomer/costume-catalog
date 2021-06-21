@@ -123,7 +123,7 @@ func (db MongoDB) DeleteCostume(oid string) (int64, error) {
 
     primitiveId, err := primitive.ObjectIDFromHex(oid)
 	if err != nil {
-        log.Printf("Error while casting object id:", err.Error())
+        log.Println("Error while casting object id:", err.Error())
 	}
 
 	res, err := db.collection.DeleteOne(context.TODO(), bson.M{"_id": primitiveId})
@@ -136,7 +136,7 @@ func (db MongoDB) DeleteCostume(oid string) (int64, error) {
 }
 
 func (db MongoDB) UpdateCostume(oid string, costume model.CostumeUpdateInput) (*model.Costume, error) {
-	repr, _ := json.Marshal(costume)
+	repr, err := json.Marshal(costume)
 	log.Printf("ID to be updated: %s", oid)
 	log.Printf("Data to be used: %s", string(repr))
 
@@ -145,16 +145,17 @@ func (db MongoDB) UpdateCostume(oid string, costume model.CostumeUpdateInput) (*
 		log.Printf("Error while casting object id: %s", err.Error())
 	}
 
-	updateRes, err := db.collection.UpdateOne(context.TODO(), bson.M{"_id": primitiveId}, costume)
+	_, err = db.collection.ReplaceOne(context.TODO(), bson.M{"_id": primitiveId}, costume)
+
 	if err != nil {
 		log.Printf("Error while updating costume: %s", err.Error())
 	}
-	updatedOID := updateRes.UpsertedID.(primitive.ObjectID)
-	log.Printf("Updated ID: %s", updatedOID)
+	// updatedOID := updateRes.UpsertedID.(primitive.ObjectID)
+	log.Printf("Updated ID: %s", oid)
 
 	var res *model.Costume
 
-	err = db.collection.FindOne(context.TODO(), bson.M{"_id": updatedOID}).Decode(&res)
+	err = db.collection.FindOne(context.TODO(), bson.M{"_id": primitiveId}).Decode(&res)
 	if err != nil {
 		log.Printf("Error while fetching updated costume: %s", err.Error())
 		return nil, err

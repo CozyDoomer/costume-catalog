@@ -1,10 +1,12 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import FocusTrap from 'focus-trap-react';
-import { Form } from './Form';
-import { useEffect } from 'react';
+import React from "react";
+import ReactDOM from "react-dom";
+import FocusTrap from "focus-trap-react";
+import { Form } from "./Form";
+import { useEffect } from "react";
 
 export const Modal = ({
+  initialForm,
+  formType,
   modalRef,
   buttonRef,
   closeModal,
@@ -13,7 +15,7 @@ export const Modal = ({
 }) => {
   useEffect(() => {
     buttonRef.current.focus();
-  })
+  });
 
   return ReactDOM.createPortal(
     <FocusTrap>
@@ -42,7 +44,11 @@ export const Modal = ({
             </svg>
           </button>
           <div className="modal-body">
-            <Form closeModal={closeModal} />
+            <Form
+              initialForm={initialForm}
+              formType={formType}
+              closeModal={closeModal}
+            />
           </div>
         </div>
       </aside>

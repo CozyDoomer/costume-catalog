@@ -5,9 +5,6 @@ import "./Costume.css";
 
 export function Costume(props) {
   const pr = props.costume;
-  console.log(props.id);
-  console.log(props.costume);
-  console.log(props);
 
   let deleteRequest = {
     variables: {
@@ -18,19 +15,45 @@ export function Costume(props) {
   // only show @ before location if it's actually set
   const location = pr.location !== "" ? " @ " + pr.location : "";
 
+  const editForm = () => {
+    let tags = {};
+
+    // TODO: simplify tags? better datasetructure that works for form and graphql
+    if (pr.tags.length === 0) {
+      tags["input-0"] = "";
+    } else {
+      pr.tags.forEach((tag, i) => {
+        tags["input-" + i] = tag.name;
+      });
+    }
+
+    props.setInitialForm({
+      id: pr.id,
+      name: pr.name,
+      location: pr.location,
+      description: pr.description,
+      picture: pr.picture,
+      tags: tags,
+    });
+
+    props.setFormType({ isEdit: true });
+    props.setModalShown({ isShown: true });
+  };
+
   // TODO: allow toggling of tags to add multiple to search
   return (
     <div className="collection-item col s12 m8 offset-m2 l6 offset-l3">
       <Button
         variant="flat"
-        onClick={(e) => props.deleteCostume(deleteRequest)}
+        onClick={(_) => props.deleteCostume(deleteRequest)}
         style={{ float: "right", marginLeft: 20 }}
       >
         <i className="fas fa-trash"></i>
       </Button>
       <Button
         variant="flat"
-        onClick={(e) => props.updateCostume(props.id)}
+        // onClick={(e) => props.updateCostume(props.id)}
+        onClick={(_) => editForm()}
         style={{ float: "right", marginLeft: 20 }}
       >
         <i className="fas fa-edit"></i>

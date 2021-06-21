@@ -28,8 +28,8 @@ func (r *queryResolver) Costumes(ctx context.Context, search *string) ([]*model.
 	return r.DB.GetCostumes(search)
 }
 
-func (r *mutationResolver) CreateCostume(ctx context.Context, input model.CostumeCreateInput) (*model.Costume, error) {
-	res, err := r.DB.InsertCostume(input)
+func (r *mutationResolver) CreateCostume(ctx context.Context, costume model.CostumeCreateInput) (*model.Costume, error) {
+	res, err := r.DB.InsertCostume(costume)
 	return res, err
 }
 
@@ -38,7 +38,7 @@ func (r *mutationResolver) DeleteCostume(ctx context.Context, oid string) (int, 
 	return int(deleteCount), err
 }
 
-func (r *mutationResolver) UpdateCostume(ctx context.Context, oid string, input model.CostumeUpdateInput) (*model.Costume, error) {
-	res, err := r.DB.UpdateCostume(oid, input)
+func (r *mutationResolver) UpdateCostume(ctx context.Context, oid string, costume model.CostumeUpdateInput) (*model.Costume, error) {
+	res, err := r.DB.UpdateCostume(oid, costume)
 	return res, err
 }

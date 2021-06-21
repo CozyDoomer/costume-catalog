@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { useMutation } from "@apollo/client";
-import { CREATE_COSTUME } from "../gql/queries";
+import { CREATE_COSTUME, UPDATE_COSTUME } from "../gql/queries";
 
-export const Form = ({ closeModal }) => {
+export const Form = ({ initialForm, formType, closeModal }) => {
   const [addCostume] = useMutation(CREATE_COSTUME);
-  // TODO: allow edit e.g.
-  // const [editCostume] = useMutation(UPDATE_COSTUME);
+  const [editCostume] = useMutation(UPDATE_COSTUME);
 
   const onSubmit = (event) => {
     event.preventDefault(event);
@@ -24,28 +23,34 @@ export const Form = ({ closeModal }) => {
       }
     });
 
-    let request = {
-      variables: {
-        name: formInput.name,
-        description: formInput.description,
-        picture: formInput.picture,
-        location: formInput.location,
-        tags: tags,
-      },
-    };
-
-    console.log(request);
-    addCostume(request);
+    if (formType.isEdit) {
+      const data = {
+        variables: {
+          id: formInput.id,
+          name: formInput.name,
+          description: formInput.description,
+          picture: formInput.picture,
+          location: formInput.location,
+          tags: tags,
+        },
+      };
+      editCostume(data);
+    } else {
+      const data = {
+        variables: {
+          name: formInput.name,
+          description: formInput.description,
+          picture: formInput.picture,
+          location: formInput.location,
+          tags: tags,
+        },
+      };
+      addCostume(data);
+    }
     closeModal();
   };
 
-  const [formInput, setFormInput] = useState({
-    name: "",
-    location: "",
-    description: "",
-    picture: "",
-    tags: { "input-0": "" },
-  });
+  const [formInput, setFormInput] = useState(initialForm);
 
   const handleTagChange = (event) => {
     formInput.tags[event.target.name] = event.target.value;
@@ -68,6 +73,7 @@ export const Form = ({ closeModal }) => {
       <div className="form-group">
         <input
           className="form-control"
+          defaultValue={formInput.name}
           onChange={handleChange}
           name="name"
           required
@@ -77,6 +83,7 @@ export const Form = ({ closeModal }) => {
       <div className="form-group">
         <input
           className="form-control"
+          defaultValue={formInput.location}
           onChange={handleChange}
           name="location"
           required
@@ -86,6 +93,7 @@ export const Form = ({ closeModal }) => {
       <div className="form-group">
         <input
           className="form-control"
+          defaultValue={formInput.description}
           onChange={handleChange}
           name="description"
         />
@@ -94,6 +102,7 @@ export const Form = ({ closeModal }) => {
       <div className="form-group">
         <input
           className="form-control"
+          defaultValue={formInput.picture}
           onChange={handleChange}
           name="picture"
         />
@@ -114,12 +123,13 @@ export const Form = ({ closeModal }) => {
           <div className="row" />
           <label htmlFor="tags">Tags</label>
           <div name="dynamicInput">
-            {Object.keys(formInput.tags).map((tagKey) => (
+            {Object.entries(formInput.tags).map(([tagKey, tagValue]) => (
               <input
                 key={tagKey}
                 className="form-control"
-                onChange={handleTagChange}
+                defaultValue={tagValue}
                 name={tagKey}
+                onChange={handleTagChange}
               />
             ))}
           </div>

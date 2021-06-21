@@ -65,8 +65,8 @@ export const UPDATE_COSTUME = gql`
     $tags: [TagInput]
   ) {
     UpdateCostume(
+      id: $id
       data: {
-        id: $id
         name: $name
         description: $description
         picture: $picture
