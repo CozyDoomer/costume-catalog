@@ -30,3 +30,9 @@ webapp/.env.development.local
 webapp/.env.test.local
 webapp/.env.production.local
 webapp/npm-debug.log*
+
+server/password.txt
+Session.vim
+notes.md
+
+

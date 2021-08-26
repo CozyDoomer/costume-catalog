@@ -3,13 +3,18 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/CozyDoomer/costume-catalog/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type DB interface {
@@ -17,6 +22,7 @@ type DB interface {
 	InsertCostume(costume model.CostumeCreateInput) (*model.Costume, error)
 	UpdateCostume(oid string, costume model.CostumeUpdateInput) (*model.Costume, error)
 	DeleteCostume(oid string) (int64, error)
+	Authenticate(password string) (bool, error)
 }
 
 type MongoDB struct {
@@ -29,37 +35,58 @@ func New(client *mongo.Client) *MongoDB {
 		collection: costumes,
 	}
 }
+func FilePathWalkDir(root string) ([]string, error) {
+	var files []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
+}
+func (db MongoDB) Authenticate(hashedPassword string) (bool, error) {
+	byteHashedPassword := []byte(hashedPassword)
 
-func (db MongoDB) GetCostumes(search *string) ([]*model.Costume, error) {
-	safeSearch := regexp.QuoteMeta(*search)
-	res, err := db.collection.Find(context.TODO(), db.filter(safeSearch))
+	content, err := ioutil.ReadFile("./password.txt")
 	if err != nil {
-		log.Printf("Error while fetching costumes: %s", err.Error())
-		return nil, err
-	}
-	var costumes []*model.Costume
-
-	err = res.All(context.TODO(), &costumes)
-	if err != nil {
-		log.Printf("Error while decoding costumes: %s", err.Error())
-		return nil, err
+		return false, err
 	}
 
-	return costumes, nil
+	// read password on server, trim newline and compare to request
+	storedPassword := string(content)
+	storedPassword = strings.TrimRight(storedPassword, "\n")
+	byteStoredPassword := []byte(storedPassword)
+
+	pwErr := bcrypt.CompareHashAndPassword(byteHashedPassword, byteStoredPassword)
+
+	if pwErr == nil {
+		return true, nil
+	} else {
+		log.Printf("Failed login attempt: %s", pwErr.Error())
+		return false, nil
+	}
 }
 
 func (db MongoDB) filter(search string) bson.D {
-	return bson.D{{"$or", []bson.D{
-		bson.D{{
+	var bsonTags []bson.D
+	tags := strings.Split(search, " ")
+
+	for _, tag := range tags {
+		bsonTags = append(bsonTags, bson.D{{
 			"tags.name",
 			bson.D{{
 				"$regex",
-				"^.*" + search + ".*$",
+				"^.*" + tag + ".*$",
 			}, {
 				"$options",
 				"i",
 			}},
-		}},
+		}})
+	}
+	bsonTagsFinal := bson.D{{"$and", bsonTags}}
+
+	fieldsBson := []bson.D{
 		bson.D{{
 			"name",
 			bson.D{{
@@ -90,19 +117,40 @@ func (db MongoDB) filter(search string) bson.D {
 				"i",
 			}},
 		}},
-	}}}
+	}
+	finalBson := bson.D{{"$or", append(fieldsBson, bsonTagsFinal)}}
+
+	return finalBson
+}
+
+func (db MongoDB) GetCostumes(search *string) ([]*model.Costume, error) {
+	safeSearch := regexp.QuoteMeta(*search)
+	res, err := db.collection.Find(context.TODO(), db.filter(safeSearch))
+	if err != nil {
+		log.Printf("Error while fetching costumes: %s", err.Error())
+		return nil, err
+	}
+
+	var costumes []*model.Costume
+	err = res.All(context.TODO(), &costumes)
+	if err != nil {
+		log.Printf("Error while decoding costumes: %s", err.Error())
+		return nil, err
+	}
+
+	return costumes, nil
 }
 
 func (db MongoDB) InsertCostume(costume model.CostumeCreateInput) (*model.Costume, error) {
 	repr, _ := json.Marshal(costume)
-	log.Printf("Data to be inserted: %s", string(repr))
+	log.Printf("Insert Data: %s", string(repr))
 
 	insertRes, err := db.collection.InsertOne(context.TODO(), costume)
 	if err != nil {
 		log.Printf("Error while inserting costume: %s", err.Error())
 	}
 	oid := insertRes.InsertedID.(primitive.ObjectID)
-	log.Printf("Inserted ID: %s", oid)
+	log.Printf("ID after insert: %s", oid)
 
 	var res *model.Costume
 
@@ -113,34 +161,33 @@ func (db MongoDB) InsertCostume(costume model.CostumeCreateInput) (*model.Costum
 	}
 
 	repr, _ = json.Marshal(res)
-	log.Printf("Inserted data: %s", string(repr))
+	log.Printf("Data after insert: %s", string(repr))
 
 	return res, err
 }
 
 func (db MongoDB) DeleteCostume(oid string) (int64, error) {
-	log.Printf("ID to be deleted: %s", oid)
+	log.Printf("Delete ID: %s", oid)
 
-    primitiveId, err := primitive.ObjectIDFromHex(oid)
+	primitiveId, err := primitive.ObjectIDFromHex(oid)
 	if err != nil {
-        log.Println("Error while casting object id:", err.Error())
+		log.Println("Error while casting object id:", err.Error())
 	}
 
 	res, err := db.collection.DeleteOne(context.TODO(), bson.M{"_id": primitiveId})
 	if err != nil {
-        log.Printf("Error while deleting id: %s", err.Error())
+		log.Printf("Error while deleting id: %s", err.Error())
 	}
-    deleteCount := res.DeletedCount
+	deleteCount := res.DeletedCount
 
 	return deleteCount, err
 }
 
 func (db MongoDB) UpdateCostume(oid string, costume model.CostumeUpdateInput) (*model.Costume, error) {
 	repr, err := json.Marshal(costume)
-	log.Printf("ID to be updated: %s", oid)
-	log.Printf("Data to be used: %s", string(repr))
+	log.Printf("Update ID: %s", oid)
 
-    primitiveId, err := primitive.ObjectIDFromHex(oid)
+	primitiveId, err := primitive.ObjectIDFromHex(oid)
 	if err != nil {
 		log.Printf("Error while casting object id: %s", err.Error())
 	}
@@ -151,7 +198,7 @@ func (db MongoDB) UpdateCostume(oid string, costume model.CostumeUpdateInput) (*
 		log.Printf("Error while updating costume: %s", err.Error())
 	}
 	// updatedOID := updateRes.UpsertedID.(primitive.ObjectID)
-	log.Printf("Updated ID: %s", oid)
+	log.Printf("ID after update: %s", oid)
 
 	var res *model.Costume
 
@@ -160,6 +207,9 @@ func (db MongoDB) UpdateCostume(oid string, costume model.CostumeUpdateInput) (*
 		log.Printf("Error while fetching updated costume: %s", err.Error())
 		return nil, err
 	}
+
+	repr, _ = json.Marshal(res)
+	log.Printf("Data after update: %s", string(repr))
 
 	return res, err
 }

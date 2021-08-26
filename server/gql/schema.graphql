@@ -2,6 +2,7 @@ type Mutation {
     CreateCostume(data: CostumeCreateInput!): Costume!
     UpdateCostume(id: ID!, data: CostumeUpdateInput!): Costume!
     DeleteCostume(id: ID!): Int!
+    Authenticate(password: String!): Boolean!
 }
 
 input TagInput {
@@ -13,7 +14,7 @@ input TagInput {
 input CostumeCreateInput {
     name: String!
     description: String
-    picture: String
+    picture: String!
     location: String!
     tags: [TagInput]
 }
@@ -21,7 +22,7 @@ input CostumeCreateInput {
 input CostumeUpdateInput {
     name: String
     description: String
-    picture: String
+    picture: String!
     location: String
     tags: [TagInput]
 }
@@ -34,7 +35,7 @@ type Costume{
     id: ID!
     name: String!
     description: String
-    picture: String
+    picture: String!
     location: String!
     tags: [Tag]!
 }

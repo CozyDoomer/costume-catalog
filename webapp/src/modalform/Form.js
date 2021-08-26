@@ -6,12 +6,13 @@ export const Form = ({ initialForm, formType, closeModal }) => {
   const [addCostume] = useMutation(CREATE_COSTUME);
   const [editCostume] = useMutation(UPDATE_COSTUME);
 
+  const [formInput, setFormInput] = useState(initialForm);
+
   const onSubmit = (event) => {
     event.preventDefault(event);
 
     const tagNames = Object.values(formInput.tags);
     let tags = [];
-
     // only add tag if input is not empty
     tagNames.forEach((tagName) => {
       if (tagName !== "") {
@@ -50,11 +51,69 @@ export const Form = ({ initialForm, formType, closeModal }) => {
     closeModal();
   };
 
-  const [formInput, setFormInput] = useState(initialForm);
-
   const handleTagChange = (event) => {
     formInput.tags[event.target.name] = event.target.value;
     setFormInput(formInput);
+  };
+
+  const resizeLargeImage = (base64Str) => {
+    return new Promise((resolve) => {
+      let byteCount = base64Str.length;
+
+      // if > 14 mb resize the image
+      if (byteCount > 14000000) {
+        let img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+          let canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIDE = 1000;
+
+          if (width >= height) {
+            if (width > MAX_SIDE) {
+              height *= MAX_SIDE / width;
+              width = MAX_SIDE;
+            }
+          } else {
+            if (height > MAX_SIDE) {
+              width *= MAX_SIDE / height;
+              height = MAX_SIDE;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          let ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL());
+        };
+      } else {
+        // if <= 14 mb return the input unchanged
+        resolve(base64Str);
+      }
+    });
+  };
+
+  const handleImageChange = ({
+    target: {
+      validity,
+      files: [file],
+    },
+  }) => {
+    if (validity.valid) {
+      let reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = function () {
+        let imageBase64 = reader.result;
+        resizeLargeImage(imageBase64).then((result) => {
+          formInput.picture = result;
+          setFormInput(formInput);
+        });
+      };
+      reader.onerror = function (error) {
+        console.log("Error: ", error);
+      };
+    }
   };
 
   const handleChange = (event) => {
@@ -100,28 +159,22 @@ export const Form = ({ initialForm, formType, closeModal }) => {
         <label htmlFor="description">Description</label>
       </div>
       <div className="form-group">
-        <input
-          className="form-control"
-          defaultValue={formInput.picture}
-          onChange={handleChange}
-          name="picture"
-        />
-        <label htmlFor="picture">Picture</label>
+        <div
+          className="form-group file-field input-field"
+          style={{ marginTop: "40px" }}
+        >
+          <div className="btn">
+            <span>Upload Image</span>
+            <input type="file" accept="image/*" onChange={handleImageChange} />
+          </div>
+          <div className="file-path-wrapper">
+            <input className="file-path validate" type="text" />
+          </div>
+        </div>
       </div>
-      {/*  
-    <div class="input-group mb-3">
-      <div class="custom-file">
-        <input type="file" class="custom-file-input" name="inputGroupFile02">
-        <label class="custom-file-label" for="inputGroupFile02">Choose file</label>
-      </div>
-      <div class="input-group-append">
-        <span class="input-group-text" name="">Upload</span>
-      </div>
-    </div>      */}
       <div className="container">
         <div className="form-group">
           <div className="row" />
-          <label htmlFor="tags">Tags</label>
           <div name="dynamicInput">
             {Object.entries(formInput.tags).map(([tagKey, tagValue]) => (
               <input
@@ -133,22 +186,22 @@ export const Form = ({ initialForm, formType, closeModal }) => {
               />
             ))}
           </div>
+          <label htmlFor="tags">Tags</label>
+          <button
+            className="btn-floating btn-small waves-effect waves-light"
+            style={{ marginLeft: 10 }}
+            onClick={() => appendInput()}
+            type="button"
+          >
+            <i className="fas fa-plus"></i>
+          </button>
         </div>
-        <button
-          className="form-control btn"
-          type="button"
-          onClick={() => appendInput()}
-        >
-          +
-        </button>
       </div>
       <div className="row" />
       <div className="form-group">
-        <input
-          className="form-control btn btn-primary"
-          type="submit"
-          value="Submit"
-        />
+        <button className="btn waves-effect waves-light" type="submit">
+          Submit <i className="fas fa-paper-plane"></i>
+        </button>
       </div>
     </form>
   );

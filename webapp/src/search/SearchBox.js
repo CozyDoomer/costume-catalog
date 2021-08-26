@@ -1,16 +1,27 @@
 import React from "react";
-import "./SearchBox.css"
+import "./SearchBox.css";
 
 const SearchBox = (props) => {
-    return <div className="row">
-        <div className="input-field col s12">
-            <input placeholder="Type name, description, location or tag to filter..."
-                   id="search_string" type="text" className="Input"
-                   onChange={(e) => props.updateSearch(e.target.value)}
-                   value={props.search}
-            />
-        </div>
+  return (
+    <div>
+      <input
+        className="form-control"
+        placeholder="Search costumes"
+        style={{ marginLeft: "10px", width: "76%" }}
+        type="search"
+        onChange={(e) => props.updateSearch(e.target.value)}
+        value={props.search}
+      />
+
+      <button
+        className="waves-effect waves-light btn"
+        type="reset"
+        onClick={() => props.updateSearch("")}
+      >
+        Clear
+      </button>
     </div>
-}
+  );
+};
 
 export default SearchBox;

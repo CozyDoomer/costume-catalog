@@ -1,9 +1,8 @@
 import React from "react";
-import Button from "react-bootstrap/Button";
-import { Tags } from "../tags/Tags";
+import Tags from "../tags/Tags";
 import "./Costume.css";
 
-export function Costume(props) {
+const Costume = (props) => {
   const pr = props.costume;
 
   let deleteRequest = {
@@ -18,7 +17,7 @@ export function Costume(props) {
   const editForm = () => {
     let tags = {};
 
-    // TODO: simplify tags? better datasetructure that works for form and graphql
+    // TODO: simplify tags! better datasetructure that works for form and graphql
     if (pr.tags.length === 0) {
       tags["input-0"] = "";
     } else {
@@ -40,29 +39,27 @@ export function Costume(props) {
     props.setModalShown({ isShown: true });
   };
 
-  // TODO: allow toggling of tags to add multiple to search
   return (
     <div className="collection-item col s12 m8 offset-m2 l6 offset-l3">
-      <Button
-        variant="flat"
+      <button
+        className="waves-effect waves-teal btn-flat"
         onClick={(_) => props.deleteCostume(deleteRequest)}
-        style={{ float: "right", marginLeft: 20 }}
+        style={{ float: "right", marginLeft: 10 }}
       >
         <i className="fas fa-trash"></i>
-      </Button>
-      <Button
-        variant="flat"
-        // onClick={(e) => props.updateCostume(props.id)}
+      </button>
+      <button
+        className="waves-effect waves-teal btn-flat"
         onClick={(_) => editForm()}
-        style={{ float: "right", marginLeft: 20 }}
+        style={{ float: "right" }}
       >
         <i className="fas fa-edit"></i>
-      </Button>
+      </button>
       <div className="row valign-wrapper">
-        <div className="col s2">
+        <div className="col s4">
           <img src={pr.picture} alt="" className="responsive-img" />
         </div>
-        <div className="col s10">
+        <div className="col s8">
           <span className="name">{pr.name}</span>
           <br />
           <span className="location">
@@ -79,4 +76,6 @@ export function Costume(props) {
       </div>
     </div>
   );
-}
+};
+
+export default Costume;

@@ -53,6 +53,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		Authenticate  func(childComplexity int, password string) int
 		CreateCostume func(childComplexity int, data model.CostumeCreateInput) int
 		DeleteCostume func(childComplexity int, id string) int
 		UpdateCostume func(childComplexity int, id string, data model.CostumeUpdateInput) int
@@ -74,6 +75,7 @@ type MutationResolver interface {
 	CreateCostume(ctx context.Context, data model.CostumeCreateInput) (*model.Costume, error)
 	UpdateCostume(ctx context.Context, id string, data model.CostumeUpdateInput) (*model.Costume, error)
 	DeleteCostume(ctx context.Context, id string) (int, error)
+	Authenticate(ctx context.Context, password string) (bool, error)
 }
 type QueryResolver interface {
 	Costumes(ctx context.Context, search *string) ([]*model.Costume, error)
@@ -135,6 +137,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Costume.Tags(childComplexity), true
+
+	case "Mutation.Authenticate":
+		if e.complexity.Mutation.Authenticate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_Authenticate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Authenticate(childComplexity, args["password"].(string)), true
 
 	case "Mutation.CreateCostume":
 		if e.complexity.Mutation.CreateCostume == nil {
@@ -278,6 +292,7 @@ var parsedSchema = gqlparser.MustLoadSchema(
     CreateCostume(data: CostumeCreateInput!): Costume!
     UpdateCostume(id: ID!, data: CostumeUpdateInput!): Costume!
     DeleteCostume(id: ID!): Int!
+    Authenticate(password: String!): Boolean!
 }
 
 input TagInput {
@@ -289,7 +304,7 @@ input TagInput {
 input CostumeCreateInput {
     name: String!
     description: String
-    picture: String
+    picture: String!
     location: String!
     tags: [TagInput]
 }
@@ -297,7 +312,7 @@ input CostumeCreateInput {
 input CostumeUpdateInput {
     name: String
     description: String
-    picture: String
+    picture: String!
     location: String
     tags: [TagInput]
 }
@@ -310,7 +325,7 @@ type Costume{
     id: ID!
     name: String!
     description: String
-    picture: String
+    picture: String!
     location: String!
     tags: [Tag]!
 }
@@ -328,6 +343,20 @@ type Tag {
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_Authenticate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_CreateCostume_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -577,12 +606,15 @@ func (ec *executionContext) _Costume_picture(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Costume_location(ctx context.Context, field graphql.CollectedField, obj *model.Costume) (ret graphql.Marshaler) {
@@ -789,6 +821,50 @@ func (ec *executionContext) _Mutation_DeleteCostume(ctx context.Context, field g
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_Authenticate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_Authenticate_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Authenticate(rctx, args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_costumes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2223,7 +2299,7 @@ func (ec *executionContext) unmarshalInputCostumeCreateInput(ctx context.Context
 			}
 		case "picture":
 			var err error
-			it.Picture, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Picture, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2265,7 +2341,7 @@ func (ec *executionContext) unmarshalInputCostumeUpdateInput(ctx context.Context
 			}
 		case "picture":
 			var err error
-			it.Picture, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Picture, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2350,6 +2426,9 @@ func (ec *executionContext) _Costume(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Costume_description(ctx, field, obj)
 		case "picture":
 			out.Values[i] = ec._Costume_picture(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "location":
 			out.Values[i] = ec._Costume_location(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -2398,6 +2477,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "DeleteCostume":
 			out.Values[i] = ec._Mutation_DeleteCostume(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Authenticate":
+			out.Values[i] = ec._Mutation_Authenticate(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

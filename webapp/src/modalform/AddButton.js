@@ -1,4 +1,5 @@
 import React from "react";
+
 const AddButton = ({ setInitialForm, addButtonText, buttonRef, showModal }) => {
   const showAddModal = () => {
     setInitialForm({
@@ -13,10 +14,10 @@ const AddButton = ({ setInitialForm, addButtonText, buttonRef, showModal }) => {
   };
   return (
     <button
-      className="btn btn-lg btn-danger center modal-button"
+      className="waves-effect waves-light btn"
       ref={buttonRef}
       onClick={showAddModal}
-      style={{ float: "right", marginRight: 20, marginTop: 20 }}
+      style={{ float: "right", marginTop: "7px", marginRight: "40px" }}
     >
       {addButtonText}
     </button>

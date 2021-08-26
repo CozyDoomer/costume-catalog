@@ -1,14 +1,18 @@
 version: "3.7"
+
 services:
   app:
     build: .
     container_name: app
-    ports:
-      - 8080:8080
+    expose:
+      - 8080
     depends_on:
       - db
     environment:
       profile: prod
+    networks:
+      - web
+
   db:
     image: mongo:4.2.2
     container_name: db
@@ -16,3 +20,19 @@ services:
       MONGO_INITDB_DATABASE: costumes
     volumes:
       - ./server/db/mongo.init:/docker-entrypoint-initdb.d/mongo-init.js
+    networks:
+      - web
+
+  proxy:
+    image: caddy
+    container_name: app_proxy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+
+networks:
+  web:

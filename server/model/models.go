@@ -6,7 +6,7 @@ type Costume struct {
 	ID          string  `json:"id" bson:"_id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
-	Picture     *string `json:"picture"`
+	Picture     string  `json:"picture"`
 	Location    string  `json:"location"`
 	Tags        []*Tag  `json:"tags"`
 }
@@ -14,7 +14,7 @@ type Costume struct {
 type CostumeCreateInput struct {
 	Name        string      `json:"name"`
 	Description *string     `json:"description"`
-	Picture     *string     `json:"picture"`
+	Picture     string      `json:"picture"`
 	Location    string      `json:"location"`
 	Tags        []*TagInput `json:"tags"`
 }
@@ -22,7 +22,7 @@ type CostumeCreateInput struct {
 type CostumeUpdateInput struct {
 	Name        *string     `json:"name"`
 	Description *string     `json:"description"`
-	Picture     *string     `json:"picture"`
+	Picture     string      `json:"picture"`
 	Location    *string     `json:"location"`
 	Tags        []*TagInput `json:"tags"`
 }

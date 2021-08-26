@@ -1,5 +1,5 @@
 import React from "react";
-import { Costume } from "./Costume";
+import Costume from "./Costume";
 import "./Costume.css";
 
 const Costumes = (props) => {

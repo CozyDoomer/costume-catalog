@@ -31,9 +31,7 @@ export const Modal = ({
         <div className="modal-area" ref={modalRef}>
           <button
             ref={buttonRef}
-            aria-label="Close Modal"
-            aria-labelledby="close-modal"
-            className="_modal-close"
+            className="_modal-close waves-effect waves-teal btn-flat"
             onClick={closeModal}
           >
             <span id="close-modal" className="_hide-visual">

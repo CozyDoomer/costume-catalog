@@ -1,5 +1,11 @@
 import { gql } from "@apollo/client";
 
+export const AUTHENTICATE = gql`
+  mutation Authenticate($password: String!) {
+    Authenticate(password: $password)
+  }
+`;
+
 export const GET_COSTUMES = gql`
   query Costumes($search: String!) {
     costumes(search: $search) {
@@ -21,7 +27,7 @@ export const CREATE_COSTUME = gql`
   mutation CreateCostume(
     $name: String!
     $description: String
-    $picture: String
+    $picture: String!
     $location: String!
     $tags: [TagInput]
   ) {
@@ -60,7 +66,7 @@ export const UPDATE_COSTUME = gql`
     $id: ID!
     $name: String!
     $description: String
-    $picture: String
+    $picture: String!
     $location: String!
     $tags: [TagInput]
   ) {

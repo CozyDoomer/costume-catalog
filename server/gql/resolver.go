@@ -24,6 +24,11 @@ func (r *Resolver) Query() gen.QueryResolver {
 	return &queryResolver{r}
 }
 
+func (r *mutationResolver) Authenticate(ctx context.Context, password string) (bool, error) {
+	res, err := r.DB.Authenticate(password)
+	return res, err
+}
+
 func (r *queryResolver) Costumes(ctx context.Context, search *string) ([]*model.Costume, error) {
 	return r.DB.GetCostumes(search)
 }
