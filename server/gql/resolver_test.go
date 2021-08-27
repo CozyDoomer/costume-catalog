@@ -3,9 +3,10 @@ package gql
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/CozyDoomer/costume-catalog/model"
 	"go.mongodb.org/mongo-driver/mongo"
-	"testing"
 )
 
 type MockDB struct {
@@ -21,7 +22,7 @@ func TestCostumes(t *testing.T) {
 		Resolver: &Resolver{&MockDB{}},
 	}
 
-	costumes, err := r.Costumes(context.TODO(), "test")
+	costumes, err := r.costumes(context.TODO(), "test")
 
 	if costumes[0].ID != "test-id" {
 		t.Errorf("GetCostumes() got = %v, want test-id", costumes[0].ID)
