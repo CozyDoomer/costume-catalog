@@ -160,9 +160,6 @@ func (db MongoDB) InsertCostume(costume model.CostumeCreateInput) (*model.Costum
 		return nil, err
 	}
 
-	repr, _ = json.Marshal(res)
-	log.Printf("Data after insert: %s", string(repr))
-
 	return res, err
 }
 

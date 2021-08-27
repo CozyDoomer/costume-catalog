@@ -1,4 +1,4 @@
-# christianunterrainer.dev
+# replace with your domain in production
 localhost
 
 reverse_proxy app:8080
