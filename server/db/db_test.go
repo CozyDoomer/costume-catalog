@@ -13,20 +13,10 @@ func TestFilter(t *testing.T) {
 
 	want := bson.D{{"$or", []bson.D{
 		bson.D{{
-			"tags.name",
-			bson.D{{
-				"$regex",
-				"^test.*$",
-			}, {
-				"$options",
-				"i",
-			}},
-		}},
-		bson.D{{
 			"name",
 			bson.D{{
 				"$regex",
-				"^test.*$",
+				"^.*test.*$",
 			}, {
 				"$options",
 				"i",
@@ -36,7 +26,7 @@ func TestFilter(t *testing.T) {
 			"description",
 			bson.D{{
 				"$regex",
-				"^test.*$",
+				"^.*test.*$",
 			}, {
 				"$options",
 				"i",
@@ -46,13 +36,28 @@ func TestFilter(t *testing.T) {
 			"location",
 			bson.D{{
 				"$regex",
-				"^test.*$",
+				"^.*test.*$",
 			}, {
 				"$options",
 				"i",
 			}},
 		}},
-	}}}
+
+		bson.D{{"$and", []bson.D{
+			bson.D{{
+				"tags.name",
+				bson.D{{
+					"$regex",
+					"^.*test.*$",
+				}, {
+					"$options",
+					"i",
+				}},
+			}},
+		}}},
+	},
+	}}
+
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("filter() got = %v, want %v", got, want)
 	}
