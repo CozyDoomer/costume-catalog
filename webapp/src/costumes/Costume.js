@@ -56,10 +56,10 @@ const Costume = (props) => {
         <i className="fas fa-edit"></i>
       </button>
       <div className="row valign-wrapper">
-        <div className="col s6 m4 l3">
+        <div className="col s5 m4 l3">
           <img src={pr.picture} alt="" className="responsive-img" />
         </div>
-        <div className="col s6 m8 l9">
+        <div className="col s7 m8 l9">
           <span className="name">{pr.name}</span>
           <br />
           <span className="location">

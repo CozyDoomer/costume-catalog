@@ -1,8 +1,31 @@
 .name {
-    font-size: x-large;
+  font-size: x-large;
 }
 
 .location {
-    font-size: large;
+  font-size: large;
 }
 
+@media screen and (max-width: 1000px) {
+  .name {
+    font-size: large !important;
+  }
+}
+
+@media screen and (max-width: 1000px) {
+  .location {
+    font-size: medium !important;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .name {
+    font-size: medium !important;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .location {
+    font-size: small !important;
+  }
+}
