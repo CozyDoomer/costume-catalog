@@ -142,9 +142,6 @@ func (db MongoDB) GetCostumes(search *string) ([]*model.Costume, error) {
 }
 
 func (db MongoDB) InsertCostume(costume model.CostumeCreateInput) (*model.Costume, error) {
-	repr, _ := json.Marshal(costume)
-	log.Printf("Insert Data: %s", string(repr))
-
 	insertRes, err := db.collection.InsertOne(context.TODO(), costume)
 	if err != nil {
 		log.Printf("Error while inserting costume: %s", err.Error())

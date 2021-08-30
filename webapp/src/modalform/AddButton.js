@@ -14,10 +14,9 @@ const AddButton = ({ setInitialForm, addButtonText, buttonRef, showModal }) => {
   };
   return (
     <button
-      className="waves-effect waves-light btn"
+      className="waves-effect waves-light btn-small"
       ref={buttonRef}
       onClick={showAddModal}
-      style={{ float: "right", marginTop: "7px", marginRight: "40px" }}
     >
       {addButtonText}
     </button>

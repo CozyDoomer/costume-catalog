@@ -44,7 +44,7 @@ const Costume = (props) => {
       <button
         className="waves-effect waves-teal btn-flat"
         onClick={(_) => props.deleteCostume(deleteRequest)}
-        style={{ float: "right", marginLeft: 10 }}
+        style={{ float: "right" }}
       >
         <i className="fas fa-trash"></i>
       </button>
@@ -56,10 +56,10 @@ const Costume = (props) => {
         <i className="fas fa-edit"></i>
       </button>
       <div className="row valign-wrapper">
-        <div className="col s4">
+        <div className="col s6 m4 l3">
           <img src={pr.picture} alt="" className="responsive-img" />
         </div>
-        <div className="col s8">
+        <div className="col s6 m8 l9">
           <span className="name">{pr.name}</span>
           <br />
           <span className="location">
